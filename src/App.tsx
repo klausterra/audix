@@ -15,8 +15,11 @@ import {
   trackPageView,
   trackEvent,
   trackGoal,
+  trackOutboundLink,
   setMatomoUser,
   resetMatomoUser,
+  INSTAGRAM_URL,
+  HIPERCUBE_URL,
 } from './matomo'
 import { LandingPage } from './LandingPage'
 import './App.css'
@@ -401,9 +404,9 @@ export default function App() {
                 {user ? `Conectado como ${user.email} • Progresso salvo no Firestore` : 'Faça login para salvar seus dados'}
               </p>
               <div className="training-creator-mini">
-                <span>Criado por <a href="https://www.instagram.com/klausterra" target="_blank" rel="noopener noreferrer">@klausterra</a></span>
+                <span>Criado por <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" onClick={() => trackOutboundLink(INSTAGRAM_URL, 'instagram_klausterra_training')}>@klausterra</a></span>
                 <span className="dot">•</span>
-                <span>Desenvolvido pela <a href="https://hipercube.ia.br" target="_blank" rel="noopener noreferrer">Hipercube</a></span>
+                <span>Desenvolvido pela <a href={HIPERCUBE_URL} target="_blank" rel="noopener noreferrer" onClick={() => trackOutboundLink(HIPERCUBE_URL, 'hipercube_portal_training')}>Hipercube</a></span>
               </div>
             </div>
             <div className="training-actions">
@@ -414,6 +417,15 @@ export default function App() {
                 </button>
               )}
             </div>
+          </div>
+
+          {/* Pro Modules Teaser */}
+          <div className="pro-teaser-bar">
+            <span className="pro-teaser-badge">🚀 Em Breve</span>
+            <span className="pro-teaser-text">Novos módulos Pro: Treino de Intervalos (2ª a 8ª), Acordes e múltiplos timbres (R$ 9,90/mês).</span>
+            <button className="pro-teaser-btn" onClick={() => changeView('landing')}>
+              Ver Roadmap
+            </button>
           </div>
 
           {/* Stats bar */}
@@ -695,9 +707,9 @@ export default function App() {
 
       <footer className="footer">
         <div className="footer-credits">
-          <span>Criado por <a href="https://www.instagram.com/klausterra" target="_blank" rel="noopener noreferrer">Klaus Terra</a></span>
+          <span>Criado por <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" onClick={() => trackOutboundLink(INSTAGRAM_URL, 'instagram_klausterra_footer')}>Klaus Terra</a></span>
           <span className="footer-divider">•</span>
-          <span>Desenvolvido pela <a href="https://hipercube.ia.br" target="_blank" rel="noopener noreferrer">Hipercube</a></span>
+          <span>Desenvolvido pela <a href={HIPERCUBE_URL} target="_blank" rel="noopener noreferrer" onClick={() => trackOutboundLink(HIPERCUBE_URL, 'hipercube_portal_footer')}>Hipercube</a></span>
         </div>
         <p className="footer-sub">Audix • Treino Auditivo Musical 100% Gratuito</p>
       </footer>

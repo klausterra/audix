@@ -55,6 +55,22 @@ export function trackGoal(goalId: number, revenue?: number): void {
   }
 }
 
+export function trackOutboundLink(url: string, targetName: string): void {
+  const _paq = window._paq
+  if (_paq) {
+    _paq.push(['trackLink', url, 'link'])
+  }
+  trackEvent('Outbound', 'click', targetName)
+  if (targetName.toLowerCase().includes('instagram')) {
+    trackGoal(4)
+  } else if (targetName.toLowerCase().includes('hipercube')) {
+    trackGoal(5)
+  }
+}
+
+export const INSTAGRAM_URL = 'https://www.instagram.com/klausterra?mtm_campaign=audix_app&mtm_source=audix&mtm_medium=creator_link&mtm_kwd=instagram_klausterra'
+export const HIPERCUBE_URL = 'https://hipercube.ia.br?mtm_campaign=audix_app&mtm_source=audix&mtm_medium=creator_link&mtm_kwd=hipercube_portal'
+
 export function setMatomoUser(userId: string): void {
   const _paq = window._paq
   if (!_paq) return

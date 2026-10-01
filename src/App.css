@@ -1274,6 +1274,286 @@
   opacity: 0.5;
 }
 
+/* Roadmap Card */
+.roadmap-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  box-shadow: var(--shadow-lg);
+}
+
+.roadmap-header {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.roadmap-tag {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-weight: 700;
+}
+
+.roadmap-header h2 {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.roadmap-header p {
+  font-size: 13px;
+  color: var(--text-muted);
+  max-width: 540px;
+}
+
+.modules-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 600px) {
+  .modules-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.module-item {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  position: relative;
+}
+
+.module-icon {
+  font-size: 22px;
+}
+
+.module-item h4 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.module-item p {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.module-badge {
+  align-self: flex-start;
+  font-size: 10px;
+  font-weight: 700;
+  color: #c084fc;
+  background: rgba(192, 132, 252, 0.12);
+  border: 1px solid rgba(192, 132, 252, 0.3);
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-top: 4px;
+}
+
+.roadmap-footer {
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed var(--border-color);
+  padding: 10px 14px;
+  border-radius: 10px;
+}
+
+/* Showcase Section */
+.showcase-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+@media (max-width: 640px) {
+  .showcase-section {
+    grid-template-columns: 1fr;
+  }
+}
+
+.showcase-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 22px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  justify-content: space-between;
+  box-shadow: var(--shadow-lg);
+  transition: all 0.15s ease;
+}
+
+.showcase-card:hover {
+  transform: translateY(-2px);
+}
+
+.creator-showcase:hover {
+  border-color: #e1306c;
+}
+
+.hipercube-showcase:hover {
+  border-color: var(--accent-blue);
+}
+
+.showcase-badge {
+  align-self: flex-start;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  background: rgba(225, 48, 108, 0.15);
+  color: #f43f5e;
+  border: 1px solid rgba(225, 48, 108, 0.3);
+}
+
+.showcase-badge.company {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.showcase-body {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.showcase-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f43f5e, #8b5cf6);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.showcase-avatar.hc {
+  background: linear-gradient(135deg, #2563eb, #10b981);
+}
+
+.showcase-text h3 {
+  font-size: 17px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.showcase-bio {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+.btn-showcase {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 10px 16px;
+  border-radius: 10px;
+  transition: all 0.15s ease;
+}
+
+.btn-showcase.instagram {
+  background: linear-gradient(135deg, rgba(225, 48, 108, 0.2), rgba(139, 92, 246, 0.2));
+  border: 1px solid rgba(225, 48, 108, 0.4);
+  color: #fca5a5;
+}
+
+.btn-showcase.instagram:hover {
+  background: linear-gradient(135deg, #e1306c, #8b5cf6);
+  color: #ffffff;
+  box-shadow: 0 4px 15px rgba(225, 48, 108, 0.4);
+}
+
+.btn-showcase.hipercube {
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  color: #93c5fd;
+}
+
+.btn-showcase.hipercube:hover {
+  background: #2563eb;
+  color: #ffffff;
+  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+}
+
+/* Pro Teaser Bar in Training */
+.pro-teaser-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.08), rgba(139, 92, 246, 0.08));
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  padding: 8px 14px;
+  border-radius: 10px;
+}
+
+.pro-teaser-badge {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.15);
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.pro-teaser-text {
+  font-size: 12px;
+  color: var(--text-muted);
+  flex: 1;
+}
+
+.pro-teaser-btn {
+  background: transparent;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: #fbbf24;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.pro-teaser-btn:hover {
+  background: rgba(245, 158, 11, 0.2);
+  color: #ffffff;
+}
+
 /* Footer Credits */
 .footer {
   text-align: center;

@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import type { User } from 'firebase/auth'
 import { recordLeadForm } from './firebase'
-import { trackEvent, trackGoal } from './matomo'
+import { trackEvent, trackGoal, trackOutboundLink, INSTAGRAM_URL, HIPERCUBE_URL } from './matomo'
 
 interface LandingPageProps {
   onStartTraining: () => void
@@ -34,7 +34,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         name: leadName,
         email: leadEmail,
         instrument,
-        goal: 'Treino de percepção auditiva',
+        goal: 'Treino de percepção auditiva e lista VIP de novos módulos',
       })
       trackEvent('Lead', 'form_submit', instrument)
       trackGoal(2) // Lead_Captured
@@ -116,10 +116,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         <div className="free-banner-content">
           <div className="free-badge-big">GRÁTIS</div>
           <div className="free-banner-text">
-            <h3>Por que o Audix é gratuito?</h3>
+            <h3>O treino de notas é 100% gratuito e para sempre</h3>
             <p>
-              A percepção musical deve ser acessível para todo músico.
-              Sem assinaturas pagas, sem notas cromáticas trancadas e sem propagandas atrapalhando seu foco sonoro.
+              Toda a base de percepção de notas cromáticas, oitavas, Web Audio sintetizado e sincronização na nuvem
+              é livre para qualquer músico praticar sem limites e sem propagandas chatas.
             </p>
           </div>
         </div>
@@ -160,12 +160,58 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         </div>
       </section>
 
+      {/* Roadmap & Future Pro Modules */}
+      <section className="roadmap-card">
+        <div className="roadmap-header">
+          <span className="roadmap-tag">Roadmap de Expansão</span>
+          <h2>Próximas Funcionalidades & Módulos Pro</h2>
+          <p>
+            O treino de notas individuais permanecerá <strong>100% gratuito</strong>. Para os módulos avançados abaixo,
+            vamos disponibilizar uma assinatura simbólica e super acessível (R$ 9,90/mês):
+          </p>
+        </div>
+
+        <div className="modules-grid">
+          <div className="module-item">
+            <span className="module-icon">🎼</span>
+            <h4>Treino de Intervalos</h4>
+            <p>Identifique segundas, terças, quartas, quintas e oitavas ascendentes e descendentes.</p>
+            <span className="module-badge">Em Breve</span>
+          </div>
+
+          <div className="module-item">
+            <span className="module-icon">🎸</span>
+            <h4>Acordes & Tétrades</h4>
+            <p>Reconheça tríades maiores, menores, diminutas e tétrades com 7M/m7 ao ouvir.</p>
+            <span className="module-badge">Em Breve</span>
+          </div>
+
+          <div className="module-item">
+            <span className="module-icon">🎹</span>
+            <h4>Timbres Instrumentais</h4>
+            <p>Alterne entre piano de cauda acústico, violão nylon/aço, rhodes e sintetizador.</p>
+            <span className="module-badge">Em Breve</span>
+          </div>
+
+          <div className="module-item">
+            <span className="module-icon">📊</span>
+            <h4>Diagnóstico de Dificuldades</h4>
+            <p>Análise estatística para focar automaticamente nas notas e intervalos onde você mais erra.</p>
+            <span className="module-badge">Em Breve</span>
+          </div>
+        </div>
+
+        <div className="roadmap-footer">
+          <p>💡 Cadastre-se abaixo para garantir <strong>condição especial de fundador</strong> quando os módulos forem lançados.</p>
+        </div>
+      </section>
+
       {/* Lead Capture Section */}
       <section className="lead-capture-card">
         <div className="lead-header">
-          <span className="lead-pill">Comunidade de Músicos</span>
-          <h2>Quer evoluir seu ouvido mais rápido?</h2>
-          <p>Cadastre-se para receber novos exercícios de intervalos, acordes e dicas práticas de treino diário.</p>
+          <span className="lead-pill">Lista VIP de Fundadores</span>
+          <h2>Quer receber novos exercícios e avisos de lançamento?</h2>
+          <p>Cadastre seu e-mail para receber guias práticos de treino de ouvido e garantir acesso antecipado aos módulos Pro.</p>
         </div>
 
         {!leadSubmitted ? (
@@ -203,15 +249,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </div>
 
             <button type="submit" className="btn-lead-submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Cadastrando...' : 'Quero Receber Dicas e Exercícios ➔'}
+              {isSubmitting ? 'Cadastrando...' : 'Quero Acesso VIP e Dicas de Percepção ➔'}
             </button>
             <span className="lead-privacy">Respeitamos sua privacidade. Zero spam.</span>
           </form>
         ) : (
           <div className="lead-success-box">
             <span className="success-icon">✅</span>
-            <h3>Cadastro confirmado com sucesso!</h3>
-            <p>Seus dados foram registrados no Audix. Agora faça login com sua conta Google para treinar.</p>
+            <h3>Você está na Lista VIP do Audix!</h3>
+            <p>Seus dados foram registrados com sucesso no Firestore. Agora faça login com sua conta Google para começar a treinar.</p>
             {!user && (
               <button className="btn-hero-primary" onClick={onLogin} style={{ marginTop: '12px' }}>
                 Entrar com Google ➔
@@ -221,36 +267,55 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         )}
       </section>
 
-      {/* Creator Credits Section */}
-      <section className="creator-card">
-        <div className="creator-content">
-          <span className="creator-badge">Iniciativa Independente</span>
-          <h3>Criado por Klaus Terra & Hipercube</h3>
-          <p>
-            Desenvolvido para músicos, cantores, estudantes e entusiastas que desejam destravar o ouvido musical sem barreiras.
-          </p>
-          <div className="creator-links">
-            <a
-              href="https://www.instagram.com/klausterra"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-creator-link instagram"
-            >
-              <svg className="social-svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
-              </svg>
-              <span>Instagram @klausterra</span>
-            </a>
-            <a
-              href="https://hipercube.ia.br"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-creator-link hipercube"
-            >
-              <span>🌐</span>
-              <span>hipercube.ia.br</span>
-            </a>
+      {/* Prominent Creator & Hipercube Showcase */}
+      <section className="showcase-section">
+        <div className="showcase-card creator-showcase">
+          <div className="showcase-badge">Criador</div>
+          <div className="showcase-body">
+            <div className="showcase-avatar">KT</div>
+            <div className="showcase-text">
+              <h3>Klaus Terra</h3>
+              <p className="showcase-bio">
+                Engenheiro de IA, músico e fundador de produtos de alta tecnologia.
+                Compartilho bastidores de desenvolvimento de ferramentas musicais, inteligência artificial e código em produção.
+              </p>
+            </div>
           </div>
+          <a
+            href={INSTAGRAM_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-showcase instagram"
+            onClick={() => trackOutboundLink(INSTAGRAM_URL, 'instagram_klausterra_showcase')}
+          >
+            <svg className="social-svg" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+              <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+            </svg>
+            <span>Seguir @klausterra no Instagram ➔</span>
+          </a>
+        </div>
+
+        <div className="showcase-card hipercube-showcase">
+          <div className="showcase-badge company">Desenvolvedora</div>
+          <div className="showcase-body">
+            <div className="showcase-avatar hc">HC</div>
+            <div className="showcase-text">
+              <h3>Hipercube</h3>
+              <p className="showcase-bio">
+                Ecossistema de inteligência artificial, engenharia de software e produtos digitais que potencializam pessoas e empresas.
+              </p>
+            </div>
+          </div>
+          <a
+            href={HIPERCUBE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-showcase hipercube"
+            onClick={() => trackOutboundLink(HIPERCUBE_URL, 'hipercube_portal_showcase')}
+          >
+            <span>🌐</span>
+            <span>Conhecer o portal hipercube.ia.br ➔</span>
+          </a>
         </div>
       </section>
 

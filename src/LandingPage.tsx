@@ -272,7 +272,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         <div className="showcase-card creator-showcase">
           <div className="showcase-badge">Criador</div>
           <div className="showcase-body">
-            <div className="showcase-avatar">KT</div>
+            <img src="/klaus-terra.jpg" alt="Klaus Terra" className="showcase-photo" />
             <div className="showcase-text">
               <h3>Klaus Terra</h3>
               <p className="showcase-bio">
@@ -298,7 +298,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         <div className="showcase-card hipercube-showcase">
           <div className="showcase-badge company">Desenvolvedora</div>
           <div className="showcase-body">
-            <div className="showcase-avatar hc">HC</div>
+            <div className="showcase-logo-wrap">
+              <img src="/hipercube-logo.png" alt="Hipercube" className="showcase-logo" />
+            </div>
             <div className="showcase-text">
               <h3>Hipercube</h3>
               <p className="showcase-bio">

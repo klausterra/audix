@@ -404,8 +404,10 @@ export default function App() {
                 {user ? `Conectado como ${user.email} • Progresso salvo no Firestore` : 'Faça login para salvar seus dados'}
               </p>
               <div className="training-creator-mini">
+                <img src="/klaus-terra.jpg" alt="" className="mini-avatar" />
                 <span>Criado por <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" onClick={() => trackOutboundLink(INSTAGRAM_URL, 'instagram_klausterra_training')}>@klausterra</a></span>
                 <span className="dot">•</span>
+                <img src="/hipercube-logo.png" alt="" className="mini-avatar hc" />
                 <span>Desenvolvido pela <a href={HIPERCUBE_URL} target="_blank" rel="noopener noreferrer" onClick={() => trackOutboundLink(HIPERCUBE_URL, 'hipercube_portal_training')}>Hipercube</a></span>
               </div>
             </div>

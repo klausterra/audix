@@ -574,6 +574,8 @@ export default function App() {
                   }}
                 >
                   <option value="piano">🎹 Piano Acústico</option>
+                  <option value="acoustic_guitar">🎸 Violão Acústico</option>
+                  <option value="electric_guitar">⚡ Guitarra Elétrica</option>
                   <option value="synth">🔊 Sintetizador</option>
                 </select>
               </div>

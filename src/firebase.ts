@@ -12,6 +12,8 @@ import {
   doc,
   getDoc,
   setDoc,
+  addDoc,
+  collection,
   serverTimestamp,
 } from 'firebase/firestore'
 
@@ -32,20 +34,56 @@ googleProvider.setCustomParameters({ prompt: 'select_account' })
 
 export async function loginWithGoogle(): Promise<User> {
   const result = await signInWithPopup(auth, googleProvider)
-  // Ensure profile doc exists
-  const userRef = doc(db, 'audix_users', result.user.uid)
+  const user = result.user
+
+  // Ensure profile doc exists in audix_users
+  const userRef = doc(db, 'audix_users', user.uid)
   const snap = await getDoc(userRef)
   if (!snap.exists()) {
     await setDoc(userRef, {
-      displayName: result.user.displayName || '',
-      email: result.user.email || '',
-      photoURL: result.user.photoURL || '',
+      displayName: user.displayName || '',
+      email: user.email || '',
+      photoURL: user.photoURL || '',
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       stats: { total: 0, correct: 0, streak: 0, bestStreak: 0 },
     }, { merge: true })
   }
-  return result.user
+
+  // Also record lead in audix_leads
+  try {
+    const leadRef = doc(db, 'audix_leads', user.uid)
+    await setDoc(leadRef, {
+      uid: user.uid,
+      name: user.displayName || '',
+      email: user.email || '',
+      provider: 'google',
+      source: 'audix_app',
+      lastSeen: serverTimestamp(),
+    }, { merge: true })
+  } catch (err) {
+    console.warn('Failed to record lead on login:', err)
+  }
+
+  return user
+}
+
+export interface LeadFormData {
+  name: string
+  email: string
+  instrument?: string
+  goal?: string
+}
+
+export async function recordLeadForm(data: LeadFormData): Promise<string> {
+  const leadsCol = collection(db, 'audix_leads')
+  const docRef = await addDoc(leadsCol, {
+    ...data,
+    provider: 'lead_form',
+    source: 'landing_page',
+    createdAt: serverTimestamp(),
+  })
+  return docRef.id
 }
 
 export async function logoutUser(): Promise<void> {

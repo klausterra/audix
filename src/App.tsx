@@ -10,6 +10,14 @@ import {
   fetchUserStatsFromFirestore,
   type UserStats,
 } from './firebase'
+import {
+  initMatomo,
+  trackPageView,
+  trackEvent,
+  trackGoal,
+  setMatomoUser,
+  resetMatomoUser,
+} from './matomo'
 import { LandingPage } from './LandingPage'
 import './App.css'
 
@@ -22,6 +30,7 @@ export default function App() {
   const [currentView, setCurrentView] = useState<'landing' | 'app'>('landing')
   const [user, setUser] = useState<User | null>(null)
   const [isSyncing, setIsSyncing] = useState(false)
+  const [showAuthModal, setShowAuthModal] = useState(false)
 
   // App Training State
   const [selectedNotes, setSelectedNotes] = useState<string[]>(['C', 'D', 'E', 'F', 'G', 'A', 'B'])
@@ -45,6 +54,28 @@ export default function App() {
 
   const activeNotes = ALL_NOTES.filter(n => selectedNotes.includes(n.id))
 
+  // Initialize Matomo Analytics on boot
+  useEffect(() => {
+    initMatomo()
+    trackPageView('/', 'Audix • Início')
+  }, [])
+
+  // Track view changes in Matomo
+  const changeView = useCallback((view: 'landing' | 'app') => {
+    if (view === 'app' && !user) {
+      setShowAuthModal(true)
+      trackEvent('Auth', 'gated_access_prompt')
+      return
+    }
+    setCurrentView(view)
+    if (view === 'landing') {
+      trackPageView('/', 'Audix • Início')
+    } else {
+      trackPageView('/app', 'Audix • Treino de Ouvido')
+      trackGoal(3) // Training_Started
+    }
+  }, [user])
+
   // Sync master volume
   useEffect(() => {
     setMasterVolume(isMuted ? 0 : volume / 100)
@@ -55,6 +86,7 @@ export default function App() {
     const unsubscribe = subscribeToAuth(async (currentUser) => {
       setUser(currentUser)
       if (currentUser) {
+        setMatomoUser(currentUser.uid)
         setIsSyncing(true)
         const cloudStats = await fetchUserStatsFromFirestore(currentUser.uid)
         if (cloudStats) {
@@ -69,12 +101,14 @@ export default function App() {
           }
         }
         setIsSyncing(false)
+      } else {
+        resetMatomoUser()
       }
     })
     return () => unsubscribe()
   }, [])
 
-  // Sync stats to Firestore whenever stats or selectedNotes update
+  // Sync stats to Firestore
   const syncToCloud = useCallback((updatedStats: UserStats, notes: string[]) => {
     if (!user) return
     if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current)
@@ -93,11 +127,13 @@ export default function App() {
     const handleBeforeInstall = (e: Event) => {
       e.preventDefault()
       setInstallPrompt(e as BeforeInstallPromptEvent)
+      trackEvent('PWA', 'install_prompt_available')
     }
 
     const handleAppInstalled = () => {
       setIsInstalled(true)
       setInstallPrompt(null)
+      trackEvent('PWA', 'app_installed')
     }
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstall)
@@ -114,6 +150,7 @@ export default function App() {
   }, [])
 
   const handleInstallClick = async () => {
+    trackEvent('PWA', 'click_install_button')
     if (!installPrompt) {
       alert('Para instalar no iOS/Safari: toque no botão Compartilhar e selecione "Adicionar à Tela de Início".')
       return
@@ -123,12 +160,19 @@ export default function App() {
     if (outcome === 'accepted') {
       setIsInstalled(true)
       setInstallPrompt(null)
+      trackEvent('PWA', 'install_accepted')
     }
   }
 
   const handleLogin = async () => {
+    trackEvent('Auth', 'click_google_login')
     try {
-      await loginWithGoogle()
+      const loggedUser = await loginWithGoogle()
+      setShowAuthModal(false)
+      trackEvent('Auth', 'login_success', loggedUser.email || '')
+      trackGoal(1) // User_Login
+      setCurrentView('app')
+      trackPageView('/app', 'Audix • Treino de Ouvido')
     } catch (err: unknown) {
       console.warn('Google sign-in error:', err)
       const errorMsg = err instanceof Error ? err.message : String(err)
@@ -137,7 +181,11 @@ export default function App() {
   }
 
   const handleLogout = async () => {
+    trackEvent('Auth', 'click_logout')
     await logoutUser()
+    setUser(null)
+    setCurrentView('landing')
+    trackPageView('/', 'Audix • Início')
   }
 
   const getNoteLabel = useCallback((note: NoteItem) => {
@@ -161,6 +209,7 @@ export default function App() {
     const freq = midiToFrequency(midi)
     setIsPlaying(true)
     playTone(freq, 0.9)
+    trackEvent('Training', 'play_note', randomNote.name)
     setTimeout(() => setIsPlaying(false), 800)
   }, [activeNotes, octave])
 
@@ -173,20 +222,22 @@ export default function App() {
     const freq = midiToFrequency(midi)
     setIsPlaying(true)
     playTone(freq, 0.9)
+    trackEvent('Training', 'replay_note', currentNote.name)
     setTimeout(() => setIsPlaying(false), 800)
   }, [currentNote, currentOctave, pickNewRound])
 
   const playReferenceC = () => {
     const freq = midiToFrequency((4 + 1) * 12) // C4
     playTone(freq, 0.9)
+    trackEvent('Training', 'play_reference_c')
   }
 
-  // Initial round
+  // Initial round when entering app view
   useEffect(() => {
-    if (currentView === 'app' && !currentNote && activeNotes.length > 0) {
+    if (currentView === 'app' && user && !currentNote && activeNotes.length > 0) {
       pickNewRound()
     }
-  }, [currentView, activeNotes, currentNote, pickNewRound])
+  }, [currentView, user, activeNotes, currentNote, pickNewRound])
 
   // Cleanup timers
   useEffect(() => {
@@ -205,6 +256,7 @@ export default function App() {
         return prev
       }
       const updated = exists ? prev.filter(n => n !== id) : [...prev, id]
+      trackEvent('Training', 'toggle_note', id, exists ? 0 : 1)
       syncToCloud(stats, updated)
       return updated
     })
@@ -217,6 +269,8 @@ export default function App() {
     const isCorrect = guessedNote.id === currentNote.id
     setLastGuess({ id: guessedNote.id, correct: isCorrect })
     playFeedback(isCorrect)
+
+    trackEvent('Training', isCorrect ? 'guess_correct' : 'guess_wrong', `${guessedNote.name}_vs_${currentNote.name}`)
 
     setStats(prev => {
       const nextTotal = prev.total + 1
@@ -243,6 +297,7 @@ export default function App() {
   }
 
   const resetStats = () => {
+    trackEvent('Training', 'reset_stats')
     const zeroStats = { total: 0, correct: 0, streak: 0, bestStreak: 0 }
     setStats(zeroStats)
     setLastGuess(null)
@@ -273,7 +328,7 @@ export default function App() {
     <div className="app-container">
       {/* Top Navbar */}
       <nav className="navbar">
-        <div className="nav-brand" onClick={() => setCurrentView('landing')}>
+        <div className="nav-brand" onClick={() => changeView('landing')}>
           <span className="logo-icon">🎵</span>
           <span className="logo-title">Audix</span>
           <span className="badge">100% Free</span>
@@ -282,16 +337,13 @@ export default function App() {
         <div className="nav-links">
           <button
             className={`nav-btn ${currentView === 'landing' ? 'active' : ''}`}
-            onClick={() => setCurrentView('landing')}
+            onClick={() => changeView('landing')}
           >
             Início
           </button>
           <button
             className={`nav-btn ${currentView === 'app' ? 'active' : ''}`}
-            onClick={() => {
-              setCurrentView('app')
-              if (!currentNote) pickNewRound()
-            }}
+            onClick={() => changeView('app')}
           >
             Treinar
           </button>
@@ -299,7 +351,7 @@ export default function App() {
 
         <div className="nav-auth">
           {!user ? (
-            <button className="btn-auth-google" onClick={handleLogin}>
+            <button className="btn-auth-google" onClick={() => setShowAuthModal(true)}>
               <svg className="google-icon" viewBox="0 0 24 24" width="16" height="16">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                 <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
@@ -315,7 +367,7 @@ export default function App() {
                 <span className="user-name">{user.displayName?.split(' ')[0]}</span>
                 {isSyncing && <span className="sync-indicator" title="Sincronizando com Firestore...">☁️</span>}
               </div>
-              <button className="btn-logout" onClick={handleLogout} title="Sair da conta">
+              <button className="btn-logoff" onClick={handleLogout} title="Fazer logoff">
                 Sair
               </button>
             </div>
@@ -332,28 +384,30 @@ export default function App() {
       {/* Main Content Area */}
       {currentView === 'landing' ? (
         <LandingPage
-          onStartTraining={() => {
-            setCurrentView('app')
-            if (!currentNote) pickNewRound()
-          }}
+          onStartTraining={() => changeView('app')}
           user={user}
-          onLogin={handleLogin}
+          onLogin={() => setShowAuthModal(true)}
           onInstall={handleInstallClick}
           canInstall={!isInstalled}
         />
       ) : (
         <div className="training-view">
-          {/* Header info */}
+          {/* Header info with Logoff button */}
           <div className="training-header">
             <div>
               <h2>Treino de Percepção</h2>
               <p className="subtitle">
-                {user ? `Progresso salvo no Firestore (${user.email})` : 'Modo anônimo • Entre com Google para salvar seus recordes'}
+                {user ? `Conectado como ${user.email} • Progresso salvo no Firestore` : 'Faça login para salvar seus dados'}
               </p>
             </div>
-            {user && isSyncing && (
-              <span className="sync-badge">☁️ Sincronizando...</span>
-            )}
+            <div className="training-actions">
+              {isSyncing && <span className="sync-badge">☁️ Sincronizando...</span>}
+              {user && (
+                <button className="btn-logoff-prominent" onClick={handleLogout}>
+                  🚪 Sair da Conta
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Stats bar */}
@@ -479,6 +533,7 @@ export default function App() {
                     setSelectedNotes(p.notes)
                     setLastGuess(null)
                     setFeedbackText('')
+                    trackEvent('Training', 'select_preset', p.id)
                     syncToCloud(stats, p.notes)
                   }}
                 >
@@ -516,7 +571,11 @@ export default function App() {
                 <select
                   id="notation-select"
                   value={notation}
-                  onChange={e => setNotation(e.target.value as 'letter' | 'solfege')}
+                  onChange={e => {
+                    const val = e.target.value as 'letter' | 'solfege'
+                    setNotation(val)
+                    trackEvent('Training', 'change_notation', val)
+                  }}
                 >
                   <option value="solfege">Dó, Ré, Mi (Solfège)</option>
                   <option value="letter">C, D, E (Cifras)</option>
@@ -528,7 +587,11 @@ export default function App() {
                 <select
                   id="octave-select"
                   value={octave}
-                  onChange={e => setOctave(e.target.value === 'random' ? 'random' : Number(e.target.value))}
+                  onChange={e => {
+                    const val = e.target.value === 'random' ? 'random' : Number(e.target.value)
+                    setOctave(val)
+                    trackEvent('Training', 'change_octave', String(val))
+                  }}
                 >
                   <option value="4">4ª Oitava (Médio - C4 a B4)</option>
                   <option value="3">3ª Oitava (Grave - C3 a B3)</option>
@@ -549,6 +612,34 @@ export default function App() {
               </div>
             </div>
           </section>
+        </div>
+      )}
+
+      {/* Gated Access / Auth Modal */}
+      {showAuthModal && (
+        <div className="modal-backdrop" onClick={() => setShowAuthModal(false)}>
+          <div className="modal-box" onClick={e => e.stopPropagation()}>
+            <button className="modal-close" onClick={() => setShowAuthModal(false)}>✕</button>
+            <div className="modal-header">
+              <span className="modal-icon">🎵</span>
+              <h3>Entrar no Audix</h3>
+              <p>O acesso ao treino é 100% gratuito. Faça login com Google para salvar seu histórico e recordes na nuvem.</p>
+            </div>
+
+            <button className="btn-modal-google" onClick={handleLogin}>
+              <svg className="google-icon" viewBox="0 0 24 24" width="20" height="20">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+              </svg>
+              <span>Continuar com Google</span>
+            </button>
+
+            <span className="modal-footer-note">
+              🔒 Seus dados são salvos com segurança no Firebase do projeto Hipercube.
+            </span>
+          </div>
         </div>
       )}
 

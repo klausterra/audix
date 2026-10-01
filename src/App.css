@@ -148,13 +148,72 @@
   border-color: var(--accent-red);
 }
 
-.btn-install-mini {
-  background: transparent;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 5px 8px;
-  font-size: 13px;
+.btn-install-nav {
+  background: rgba(139, 92, 246, 0.15);
+  color: #c084fc;
+  border: 1px solid rgba(139, 92, 246, 0.35);
+  border-radius: 9999px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s ease;
+}
+
+.btn-install-nav:hover {
+  background: rgba(139, 92, 246, 0.3);
+  color: #fff;
+  border-color: #c084fc;
+}
+
+.install-modal {
+  max-width: 480px !important;
+  text-align: left !important;
+  align-items: stretch !important;
+}
+
+.install-modal .modal-header {
+  text-align: center;
+}
+
+.install-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 6px 0 10px;
+}
+
+.install-step-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
+  padding: 12px 14px;
+  border-radius: 10px;
+  text-align: left;
+}
+
+.install-step-item strong {
+  display: block;
+  font-size: 13px;
+  color: var(--text-main);
+  margin-bottom: 2px;
+}
+
+.install-step-item p {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.step-num {
+  font-size: 20px;
+  line-height: 1;
 }
 
 /* LANDING PAGE STYLES */
@@ -1106,10 +1165,154 @@
   font-size: 28px;
 }
 
+/* Creator Card on Landing Page */
+.creator-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: var(--shadow-lg);
+}
+
+.creator-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+}
+
+.creator-badge {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #c084fc;
+  background: rgba(168, 85, 247, 0.12);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-weight: 700;
+}
+
+.creator-content h3 {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.creator-content p {
+  font-size: 13px;
+  color: var(--text-muted);
+  max-width: 520px;
+  line-height: 1.5;
+}
+
+.creator-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 4px;
+}
+
+.btn-creator-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 9999px;
+  transition: all 0.15s ease;
+}
+
+.btn-creator-link:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-1px);
+}
+
+.btn-creator-link.instagram:hover {
+  border-color: #e1306c;
+  color: #f43f5e;
+}
+
+.btn-creator-link.hipercube:hover {
+  border-color: var(--accent-blue);
+  color: #60a5fa;
+}
+
+.social-svg {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* Training Creator Mini */
+.training-creator-mini {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-sub);
+  margin-top: 4px;
+}
+
+.training-creator-mini a {
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color 0.12s ease;
+}
+
+.training-creator-mini a:hover {
+  color: #c084fc;
+  text-decoration: underline;
+}
+
+.training-creator-mini .dot {
+  opacity: 0.5;
+}
+
+/* Footer Credits */
 .footer {
   text-align: center;
   font-size: 12px;
   color: var(--text-sub);
-  margin-top: 12px;
-  padding-bottom: 12px;
+  margin-top: 16px;
+  padding-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.footer-credits {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.footer-credits a {
+  color: #c084fc;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.12s ease;
+}
+
+.footer-credits a:hover {
+  color: #ffffff;
+  text-decoration: underline;
+}
+
+.footer-divider {
+  color: var(--text-sub);
+}
+
+.footer-sub {
+  font-size: 11px;
+  color: var(--text-sub);
 }

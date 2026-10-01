@@ -31,6 +31,7 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null)
   const [isSyncing, setIsSyncing] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
+  const [showInstallModal, setShowInstallModal] = useState(false)
 
   // App Training State
   const [selectedNotes, setSelectedNotes] = useState<string[]>(['C', 'D', 'E', 'F', 'G', 'A', 'B'])
@@ -151,16 +152,16 @@ export default function App() {
 
   const handleInstallClick = async () => {
     trackEvent('PWA', 'click_install_button')
-    if (!installPrompt) {
-      alert('Para instalar no iOS/Safari: toque no botão Compartilhar e selecione "Adicionar à Tela de Início".')
-      return
-    }
-    await installPrompt.prompt()
-    const { outcome } = await installPrompt.userChoice
-    if (outcome === 'accepted') {
-      setIsInstalled(true)
-      setInstallPrompt(null)
-      trackEvent('PWA', 'install_accepted')
+    if (installPrompt) {
+      await installPrompt.prompt()
+      const { outcome } = await installPrompt.userChoice
+      if (outcome === 'accepted') {
+        setIsInstalled(true)
+        setInstallPrompt(null)
+        trackEvent('PWA', 'install_accepted')
+      }
+    } else {
+      setShowInstallModal(true)
     }
   }
 
@@ -374,8 +375,8 @@ export default function App() {
           )}
 
           {!isInstalled && (
-            <button className="btn-install-mini" onClick={handleInstallClick} title="Instalar App">
-              📲
+            <button className="btn-install-nav" onClick={handleInstallClick} title="Instalar Aplicativo">
+              📲 <span>Instalar</span>
             </button>
           )}
         </div>
@@ -388,7 +389,7 @@ export default function App() {
           user={user}
           onLogin={() => setShowAuthModal(true)}
           onInstall={handleInstallClick}
-          canInstall={!isInstalled}
+          isInstalled={isInstalled}
         />
       ) : (
         <div className="training-view">
@@ -399,6 +400,11 @@ export default function App() {
               <p className="subtitle">
                 {user ? `Conectado como ${user.email} • Progresso salvo no Firestore` : 'Faça login para salvar seus dados'}
               </p>
+              <div className="training-creator-mini">
+                <span>Criado por <a href="https://www.instagram.com/klausterra" target="_blank" rel="noopener noreferrer">@klausterra</a></span>
+                <span className="dot">•</span>
+                <span>Desenvolvido pela <a href="https://hipercube.ia.br" target="_blank" rel="noopener noreferrer">Hipercube</a></span>
+              </div>
             </div>
             <div className="training-actions">
               {isSyncing && <span className="sync-badge">☁️ Sincronizando...</span>}
@@ -643,8 +649,57 @@ export default function App() {
         </div>
       )}
 
+      {/* PWA Install Instructions Modal */}
+      {showInstallModal && (
+        <div className="modal-backdrop" onClick={() => setShowInstallModal(false)}>
+          <div className="modal-box install-modal" onClick={e => e.stopPropagation()}>
+            <button className="modal-close" onClick={() => setShowInstallModal(false)}>✕</button>
+            <div className="modal-header">
+              <span className="modal-icon">📲</span>
+              <h3>Instalar o Audix</h3>
+              <p>Você pode instalar o Audix diretamente na tela inicial para treinar em tela cheia e offline.</p>
+            </div>
+
+            <div className="install-steps">
+              <div className="install-step-item">
+                <span className="step-num">💻</span>
+                <div>
+                  <strong>No Computador (Chrome ou Edge):</strong>
+                  <p>Clique no ícone de instalar (computador com seta para baixo) na barra de endereços, ou no menu <strong>⋮</strong> ➔ <strong>"Instalar Audix"</strong>.</p>
+                </div>
+              </div>
+
+              <div className="install-step-item">
+                <span className="step-num">🤖</span>
+                <div>
+                  <strong>No Celular Android:</strong>
+                  <p>Toque no menu <strong>⋮</strong> (três pontinhos) ➔ <strong>"Instalar aplicativo"</strong> ou <strong>"Adicionar à tela inicial"</strong>.</p>
+                </div>
+              </div>
+
+              <div className="install-step-item">
+                <span className="step-num">🍏</span>
+                <div>
+                  <strong>No iPhone / iPad (Safari):</strong>
+                  <p>Toque no botão de <strong>Compartilhar</strong> (quadrado com seta para cima) ➔ selecione <strong>"Adicionar à Tela de Início"</strong>.</p>
+                </div>
+              </div>
+            </div>
+
+            <button className="btn-hero-primary" onClick={() => setShowInstallModal(false)} style={{ width: '100%', justifyContent: 'center' }}>
+              Entendi, obrigado!
+            </button>
+          </div>
+        </div>
+      )}
+
       <footer className="footer">
-        <p>Audix • Projeto Hipercube • 100% Free & Open Musical Training</p>
+        <div className="footer-credits">
+          <span>Criado por <a href="https://www.instagram.com/klausterra" target="_blank" rel="noopener noreferrer">Klaus Terra</a></span>
+          <span className="footer-divider">•</span>
+          <span>Desenvolvido pela <a href="https://hipercube.ia.br" target="_blank" rel="noopener noreferrer">Hipercube</a></span>
+        </div>
+        <p className="footer-sub">Audix • Treino Auditivo Musical 100% Gratuito</p>
       </footer>
     </div>
   )

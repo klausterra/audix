@@ -37,7 +37,7 @@ export default function App() {
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [showInstallModal, setShowInstallModal] = useState(false)
 
-  // App Training State
+  // Training state
   const [selectedNotes, setSelectedNotes] = useState<string[]>(['C', 'D', 'E', 'F', 'G', 'A', 'B'])
   const [notation, setNotation] = useState<'letter' | 'solfege'>('solfege')
   const [octave, setOctave] = useState<number | 'random'>(4)
@@ -51,15 +51,14 @@ export default function App() {
   const [volume, setVolume] = useState<number>(75)
   const [isMuted, setIsMuted] = useState(false)
 
-  // PWA install state
+  // PWA
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const [isInstalled, setIsInstalled] = useState(false)
   const timerRef = useRef<number | null>(null)
   const syncTimeoutRef = useRef<number | null>(null)
 
-  const activeNotes = ALL_NOTES.filter(n => selectedNotes.includes(n.id))
+  const activeNotes = ALL_NOTES.filter((n) => selectedNotes.includes(n.id))
 
-  // Initialize Matomo Analytics on boot
   useEffect(() => {
     initMatomo()
     trackPageView('/', 'Audix • Início')
@@ -73,44 +72,42 @@ export default function App() {
       const loggedUser = await loginWithGoogle()
       setShowAuthModal(false)
       trackEvent('Auth', 'login_success', loggedUser.email || '')
-      trackGoal(1) // User_Login
+      trackGoal(1)
       setCurrentView('app')
       trackPageView('/app', 'Audix • Treino de Ouvido')
     } catch (err: unknown) {
       const errorCode = (err as { code?: string })?.code || ''
       if (errorCode === 'auth/popup-closed-by-user' || errorCode === 'auth/cancelled-popup-request') {
-        // User closed popup without signing in, clean cancellation
         return
       }
       console.warn('Google sign-in error:', err)
-      const errorMsg = err instanceof Error ? err.message : String(err)
-      alert('Erro ao conectar com Google: ' + errorMsg)
+      alert('Erro ao conectar com Google. Tente novamente.')
     } finally {
       setIsLoggingIn(false)
     }
   }, [isLoggingIn])
 
-  // Track view changes in Matomo
-  const changeView = useCallback((view: 'landing' | 'app') => {
-    if (view === 'app' && !user) {
-      handleLogin()
-      return
-    }
-    setCurrentView(view)
-    if (view === 'landing') {
-      trackPageView('/', 'Audix • Início')
-    } else {
-      trackPageView('/app', 'Audix • Treino de Ouvido')
-      trackGoal(3) // Training_Started
-    }
-  }, [user, handleLogin])
+  const changeView = useCallback(
+    (view: 'landing' | 'app') => {
+      if (view === 'app' && !user) {
+        handleLogin()
+        return
+      }
+      setCurrentView(view)
+      if (view === 'landing') {
+        trackPageView('/', 'Audix • Início')
+      } else {
+        trackPageView('/app', 'Audix • Treino de Ouvido')
+        trackGoal(3)
+      }
+    },
+    [user, handleLogin]
+  )
 
-  // Sync master volume
   useEffect(() => {
     setMasterVolume(isMuted ? 0 : volume / 100)
   }, [volume, isMuted])
 
-  // Listen to Firebase Auth state
   useEffect(() => {
     const unsubscribe = subscribeToAuth(async (currentUser) => {
       setUser(currentUser)
@@ -139,32 +136,33 @@ export default function App() {
     return () => unsubscribe()
   }, [])
 
-  // Sync stats to Firestore
-  const syncToCloud = useCallback((updatedStats: UserStats, notes: string[]) => {
-    if (!user) return
-    if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current)
-    syncTimeoutRef.current = window.setTimeout(async () => {
-      setIsSyncing(true)
-      await syncUserStatsToFirestore(user.uid, {
-        ...updatedStats,
-        selectedNotes: notes,
-      })
-      setIsSyncing(false)
-    }, 500)
-  }, [user])
+  const syncToCloud = useCallback(
+    (updatedStats: UserStats, notes: string[]) => {
+      if (!user) return
+      if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current)
+      syncTimeoutRef.current = window.setTimeout(async () => {
+        setIsSyncing(true)
+        await syncUserStatsToFirestore(user.uid, {
+          ...updatedStats,
+          selectedNotes: notes,
+        })
+        setIsSyncing(false)
+      }, 500)
+    },
+    [user]
+  )
 
-  // PWA listener
   useEffect(() => {
     const handleBeforeInstall = (e: Event) => {
       e.preventDefault()
       setInstallPrompt(e as BeforeInstallPromptEvent)
-      trackEvent('PWA', 'install_prompt_available')
+      trackEvent('PWA', 'prompt_available')
     }
 
     const handleAppInstalled = () => {
       setIsInstalled(true)
       setInstallPrompt(null)
-      trackEvent('PWA', 'app_installed')
+      trackEvent('PWA', 'installed')
     }
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstall)
@@ -181,14 +179,13 @@ export default function App() {
   }, [])
 
   const handleInstallClick = async () => {
-    trackEvent('PWA', 'click_install_button')
+    trackEvent('PWA', 'click_install')
     if (installPrompt) {
       await installPrompt.prompt()
       const { outcome } = await installPrompt.userChoice
       if (outcome === 'accepted') {
         setIsInstalled(true)
         setInstallPrompt(null)
-        trackEvent('PWA', 'install_accepted')
       }
     } else {
       setShowInstallModal(true)
@@ -196,37 +193,37 @@ export default function App() {
   }
 
   const handleLogout = async () => {
-    trackEvent('Auth', 'click_logout')
+    trackEvent('Auth', 'logout')
     await logoutUser()
     setUser(null)
     setCurrentView('landing')
     trackPageView('/', 'Audix • Início')
   }
 
-  const getNoteLabel = useCallback((note: NoteItem) => {
-    if (notation === 'solfege') {
-      return `${note.solfege} (${note.name})`
-    }
-    return note.name
-  }, [notation])
+  const getNoteLabel = useCallback(
+    (note: NoteItem) => (notation === 'solfege' ? `${note.solfege} (${note.name})` : note.name),
+    [notation]
+  )
 
-  const pickNewRound = useCallback((notesToUse: NoteItem[] = activeNotes) => {
-    if (notesToUse.length === 0) return
-    const randomNote = notesToUse[Math.floor(Math.random() * notesToUse.length)]
-    const chosenOctave = octave === 'random' ? Math.floor(Math.random() * 3) + 3 : octave
-    setCurrentNote(randomNote)
-    setCurrentOctave(chosenOctave)
-    setLastGuess(null)
-    setFeedbackText('')
+  const pickNewRound = useCallback(
+    (notesToUse: NoteItem[] = activeNotes) => {
+      if (notesToUse.length === 0) return
+      const randomNote = notesToUse[Math.floor(Math.random() * notesToUse.length)]
+      const chosenOctave = octave === 'random' ? Math.floor(Math.random() * 3) + 3 : octave
+      setCurrentNote(randomNote)
+      setCurrentOctave(chosenOctave)
+      setLastGuess(null)
+      setFeedbackText('')
 
-    // Play note sound
-    const midi = (chosenOctave + 1) * 12 + randomNote.semitoneOffset
-    const freq = midiToFrequency(midi)
-    setIsPlaying(true)
-    playTone(freq, 0.9)
-    trackEvent('Training', 'play_note', randomNote.name)
-    setTimeout(() => setIsPlaying(false), 800)
-  }, [activeNotes, octave])
+      const midi = (chosenOctave + 1) * 12 + randomNote.semitoneOffset
+      const freq = midiToFrequency(midi)
+      setIsPlaying(true)
+      playTone(freq, 0.9)
+      trackEvent('Training', 'play_note', randomNote.name)
+      setTimeout(() => setIsPlaying(false), 800)
+    },
+    [activeNotes, octave]
+  )
 
   const replayCurrentNote = useCallback(() => {
     if (!currentNote) {
@@ -242,19 +239,17 @@ export default function App() {
   }, [currentNote, currentOctave, pickNewRound])
 
   const playReferenceC = () => {
-    const freq = midiToFrequency((4 + 1) * 12) // C4
+    const freq = midiToFrequency((4 + 1) * 12)
     playTone(freq, 0.9)
-    trackEvent('Training', 'play_reference_c')
+    trackEvent('Training', 'play_ref_c')
   }
 
-  // Initial round when entering app view
   useEffect(() => {
     if (currentView === 'app' && user && !currentNote && activeNotes.length > 0) {
       pickNewRound()
     }
   }, [currentView, user, activeNotes, currentNote, pickNewRound])
 
-  // Cleanup timers
   useEffect(() => {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current)
@@ -262,22 +257,20 @@ export default function App() {
     }
   }, [])
 
-  // Handle note selection toggle
   const toggleNote = (id: string) => {
-    setSelectedNotes(prev => {
+    setSelectedNotes((prev) => {
       const exists = prev.includes(id)
       if (exists && prev.length <= 2) {
-        alert('Selecione pelo menos 2 notas para treinar.')
+        alert('Selecione ao menos 2 notas para treinar.')
         return prev
       }
-      const updated = exists ? prev.filter(n => n !== id) : [...prev, id]
+      const updated = exists ? prev.filter((n) => n !== id) : [...prev, id]
       trackEvent('Training', 'toggle_note', id, exists ? 0 : 1)
       syncToCloud(stats, updated)
       return updated
     })
   }
 
-  // Handle answer guess
   const handleGuess = (guessedNote: NoteItem) => {
     if (!currentNote || lastGuess) return
 
@@ -285,9 +278,9 @@ export default function App() {
     setLastGuess({ id: guessedNote.id, correct: isCorrect })
     playFeedback(isCorrect)
 
-    trackEvent('Training', isCorrect ? 'guess_correct' : 'guess_wrong', `${guessedNote.name}_vs_${currentNote.name}`)
+    trackEvent('Training', isCorrect ? 'correct' : 'wrong', `${guessedNote.name}_${currentNote.name}`)
 
-    setStats(prev => {
+    setStats((prev) => {
       const nextTotal = prev.total + 1
       const nextCorrect = isCorrect ? prev.correct + 1 : prev.correct
       const nextStreak = isCorrect ? prev.streak + 1 : 0
@@ -298,29 +291,31 @@ export default function App() {
     })
 
     if (isCorrect) {
-      setFeedbackText(`Correto! Era ${getNoteLabel(currentNote)} (${currentOctave}ª oitava)`)
+      setFeedbackText(`Acertou! ${getNoteLabel(currentNote)} (${currentOctave}ª oitava)`)
     } else {
-      setFeedbackText(`Errou. Era ${getNoteLabel(currentNote)} (${currentOctave}ª oitava)`)
+      setFeedbackText(`Era ${getNoteLabel(currentNote)} (${currentOctave}ª oitava)`)
     }
 
     if (autoAdvance) {
       if (timerRef.current) clearTimeout(timerRef.current)
-      timerRef.current = window.setTimeout(() => {
-        pickNewRound()
-      }, isCorrect ? 900 : 1600)
+      timerRef.current = window.setTimeout(
+        () => {
+          pickNewRound()
+        },
+        isCorrect ? 850 : 1500
+      )
     }
   }
 
   const resetStats = () => {
     trackEvent('Training', 'reset_stats')
-    const zeroStats = { total: 0, correct: 0, streak: 0, bestStreak: 0 }
-    setStats(zeroStats)
+    const zero = { total: 0, correct: 0, streak: 0, bestStreak: 0 }
+    setStats(zero)
     setLastGuess(null)
     setFeedbackText('')
-    syncToCloud(zeroStats, selectedNotes)
+    syncToCloud(zero, selectedNotes)
   }
 
-  // Keyboard shortcut listener
   useEffect(() => {
     if (currentView !== 'app') return
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -340,63 +335,57 @@ export default function App() {
   const accuracy = stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0
 
   return (
-    <div className="app-container">
-      {/* Top Navbar */}
+    <div className="app-shell">
+      {/* Navbar */}
       <nav className="navbar">
         <div className="nav-brand" onClick={() => changeView('landing')}>
           <span className="logo-icon">🎵</span>
           <span className="logo-title">Audix</span>
-          <span className="badge">100% Free</span>
+          <span className="badge-free">Free</span>
         </div>
 
-        <div className="nav-links">
-          <button
-            className={`nav-btn ${currentView === 'landing' ? 'active' : ''}`}
-            onClick={() => changeView('landing')}
-          >
-            Início
-          </button>
-          <button
-            className={`nav-btn ${currentView === 'app' ? 'active' : ''}`}
-            onClick={() => changeView('app')}
-          >
-            Treinar
-          </button>
-        </div>
+        <div className="nav-right">
+          <div className="nav-tabs">
+            <button
+              className={`nav-tab ${currentView === 'landing' ? 'active' : ''}`}
+              onClick={() => changeView('landing')}
+            >
+              Início
+            </button>
+            <button
+              className={`nav-tab ${currentView === 'app' ? 'active' : ''}`}
+              onClick={() => changeView('app')}
+            >
+              Treinar
+            </button>
+          </div>
 
-        <div className="nav-auth">
           {!user ? (
-            <button className="btn-auth-google" onClick={handleLogin} disabled={isLoggingIn}>
-              <svg className="google-icon" viewBox="0 0 24 24" width="16" height="16">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
-              </svg>
-              <span>{isLoggingIn ? 'Conectando...' : 'Entrar com Google'}</span>
+            <button className="btn-nav-login" onClick={handleLogin} disabled={isLoggingIn}>
+              {isLoggingIn ? '...' : 'Entrar'}
             </button>
           ) : (
-            <div className="user-profile-menu">
-              <div className="user-info-pill" title={`Conectado como ${user.email}`}>
-                {user.photoURL && <img src={user.photoURL} alt="" className="nav-avatar" />}
+            <>
+              <div className="user-chip" title={user.email || ''}>
+                {user.photoURL && <img src={user.photoURL} alt="" className="user-avatar" />}
                 <span className="user-name">{user.displayName?.split(' ')[0]}</span>
-                {isSyncing && <span className="sync-indicator" title="Sincronizando com Firestore...">☁️</span>}
+                {isSyncing && <span className="sync-dot" />}
               </div>
-              <button className="btn-logoff" onClick={handleLogout} title="Fazer logoff">
+              <button className="btn-sign-out" onClick={handleLogout} title="Sair da conta">
                 Sair
               </button>
-            </div>
+            </>
           )}
 
           {!isInstalled && (
-            <button className="btn-install-nav" onClick={handleInstallClick} title="Instalar Aplicativo">
-              📲 <span>Instalar</span>
+            <button className="btn-nav-install" onClick={handleInstallClick} title="Instalar aplicativo">
+              📲
             </button>
           )}
         </div>
       </nav>
 
-      {/* Main Content Area */}
+      {/* Main Content */}
       {currentView === 'landing' ? (
         <LandingPage
           onStartTraining={() => changeView('app')}
@@ -408,83 +397,69 @@ export default function App() {
         />
       ) : (
         <div className="training-view">
-          {/* Header info with Logoff button */}
+          {/* Header */}
           <div className="training-header">
-            <div>
-              <h2>Treino de Percepção</h2>
-              <p className="subtitle">
-                {user ? `Conectado como ${user.email} • Progresso salvo no Firestore` : 'Faça login para salvar seus dados'}
-              </p>
-              <div className="training-creator-mini">
-                <img src="/klaus-terra.jpg" alt="" className="mini-avatar" />
-                <span>Criado por <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" onClick={() => trackOutboundLink(INSTAGRAM_URL, 'instagram_klausterra_training')}>@klausterra</a></span>
-                <span className="dot">•</span>
-                <img src="/hipercube-logo.png" alt="" className="mini-avatar hc" />
-                <span>Desenvolvido pela <a href={HIPERCUBE_URL} target="_blank" rel="noopener noreferrer" onClick={() => trackOutboundLink(HIPERCUBE_URL, 'hipercube_portal_training')}>Hipercube</a></span>
-              </div>
-            </div>
-            <div className="training-actions">
-              {isSyncing && <span className="sync-badge">☁️ Sincronizando...</span>}
-              {user && (
-                <button className="btn-logoff-prominent" onClick={handleLogout}>
-                  🚪 Sair da Conta
-                </button>
-              )}
+            <h2>Treino de Percepção</h2>
+            <div className="training-meta">
+              <span>Criado por</span>
+              <a
+                href={INSTAGRAM_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => trackOutboundLink(INSTAGRAM_URL, 'instagram_training')}
+              >
+                @klausterra
+              </a>
+              <span>•</span>
+              <a
+                href={HIPERCUBE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => trackOutboundLink(HIPERCUBE_URL, 'hipercube_training')}
+              >
+                Hipercube
+              </a>
             </div>
           </div>
 
-          {/* Pro Modules Teaser */}
-          <div className="pro-teaser-bar">
-            <span className="pro-teaser-badge">🚀 Em Breve</span>
-            <span className="pro-teaser-text">Novos módulos Pro: Treino de Intervalos (2ª a 8ª), Acordes e múltiplos timbres (R$ 9,90/mês).</span>
-            <button className="pro-teaser-btn" onClick={() => changeView('landing')}>
-              Ver Roadmap
+          {/* Stats Bar */}
+          <div className="stats-bar">
+            <div className="stat-group">
+              <div className="stat">
+                <span className="stat-label">Precisão</span>
+                <span className="stat-value">{accuracy}%</span>
+                <span className="stat-sub">{stats.correct}/{stats.total}</span>
+              </div>
+              <div className="stat">
+                <span className="stat-label">Sequência</span>
+                <span className="stat-value streak">🔥 {stats.streak}</span>
+                <span className="stat-sub">Recorde: {stats.bestStreak}</span>
+              </div>
+            </div>
+            <button className="btn-reset" onClick={resetStats}>
+              Zerar
             </button>
           </div>
 
-          {/* Stats bar */}
-          <section className="stats-card">
-            <div className="stat-item">
-              <span className="stat-label">Precisão</span>
-              <span className="stat-value">{accuracy}%</span>
-              <span className="stat-sub">{stats.correct}/{stats.total}</span>
-            </div>
-            <div className="stat-divider" />
-            <div className="stat-item">
-              <span className="stat-label">Sequência</span>
-              <span className="stat-value streak">🔥 {stats.streak}</span>
-              <span className="stat-sub">Recorde: {stats.bestStreak}</span>
-            </div>
-            <div className="stat-divider" />
-            <div className="stat-item">
-              <button className="btn-secondary btn-sm" onClick={resetStats}>
-                Zerar Placar
-              </button>
-            </div>
-          </section>
-
-          {/* Main player area */}
-          <main className="practice-box">
-            <div className="sound-controls">
+          {/* Practice Panel */}
+          <div className="play-panel">
+            <div className="play-row">
               <button
                 className={`btn-play ${isPlaying ? 'playing' : ''}`}
                 onClick={replayCurrentNote}
-                title="Pressione [Espaço] para ouvir"
               >
-                <span className="play-icon">{isPlaying ? '🔊' : '▶'}</span>
-                <span>{isPlaying ? 'Tocando...' : 'Ouvir Nota'}</span>
+                <span>{isPlaying ? '🔊 Tocando...' : '▶ Ouvir Nota'}</span>
               </button>
-
-              <button className="btn-ref" onClick={playReferenceC} title="Tocar Dó central (C4)">
-                🎯 Referência C4
+              <button className="btn-ref" onClick={playReferenceC} title="Tocar Dó central">
+                🎯 Dó (C4)
               </button>
             </div>
 
-            {/* Volume control */}
-            <div className="volume-bar">
+            {/* Volume */}
+            <div className="vol-row">
               <button
-                className="btn-volume-icon"
-                onClick={() => setIsMuted(prev => !prev)}
+                className="btn-vol"
+                onClick={() => setIsMuted((p) => !p)}
                 title={isMuted ? 'Desmutar' : 'Mutar'}
               >
                 {isMuted || volume === 0 ? '🔇' : volume < 50 ? '🔉' : '🔊'}
@@ -494,70 +469,65 @@ export default function App() {
                 min="0"
                 max="100"
                 value={isMuted ? 0 : volume}
-                onChange={e => {
+                onChange={(e) => {
                   setVolume(Number(e.target.value))
                   if (isMuted) setIsMuted(false)
                 }}
-                className="volume-slider"
-                aria-label="Controle de volume"
+                className="vol-slider"
+                aria-label="Volume"
               />
-              <span className="volume-label">{isMuted ? 'Mudo' : `${volume}%`}</span>
+              <span className="vol-pct">{isMuted ? '0%' : `${volume}%`}</span>
             </div>
 
-            <div className="shortcut-hint">
-              <span>Dica: <b>Espaço</b> para repetir som {lastGuess ? '• <b>Enter</b> para próxima nota' : ''}</span>
-            </div>
+            <span className="play-hint">
+              Pressione <kbd>Espaço</kbd> para repetir o som
+            </span>
 
             {/* Feedback message */}
-            <div className={`feedback-banner ${lastGuess ? (lastGuess.correct ? 'success' : 'error') : ''}`}>
-              {feedbackText || 'Escute o som e clique na nota correspondente'}
+            <div className={`feedback ${lastGuess ? (lastGuess.correct ? 'correct' : 'wrong') : ''}`}>
+              {feedbackText || 'Escute e escolha a nota correspondente:'}
             </div>
 
-            {/* Note guess buttons */}
-            <div className="options-grid">
-              {activeNotes.map(note => {
+            {/* Note buttons */}
+            <div className="notes-grid">
+              {activeNotes.map((note) => {
                 const isSelected = lastGuess?.id === note.id
-                const isCorrectAnswer = currentNote?.id === note.id
-                let buttonClass = 'btn-note'
+                const isCorrect = currentNote?.id === note.id
+                let stateClass = ''
 
                 if (lastGuess) {
-                  if (isCorrectAnswer) {
-                    buttonClass += ' is-correct'
-                  } else if (isSelected && !lastGuess.correct) {
-                    buttonClass += ' is-wrong'
-                  } else {
-                    buttonClass += ' is-disabled'
-                  }
+                  if (isCorrect) stateClass = 'state-correct'
+                  else if (isSelected && !lastGuess.correct) stateClass = 'state-wrong'
+                  else stateClass = 'state-dim'
                 }
 
                 return (
                   <button
                     key={note.id}
-                    className={buttonClass}
+                    className={`btn-note ${stateClass}`}
                     disabled={Boolean(lastGuess)}
                     onClick={() => handleGuess(note)}
                   >
-                    <span className="note-name">{notation === 'solfege' ? note.solfege : note.name}</span>
-                    <span className="note-alt">{notation === 'solfege' ? note.name : note.solfege}</span>
+                    <span className="note-primary">{notation === 'solfege' ? note.solfege : note.name}</span>
+                    <span className="note-secondary">{notation === 'solfege' ? note.name : note.solfege}</span>
                   </button>
                 )
               })}
             </div>
 
             {lastGuess && !autoAdvance && (
-              <button className="btn-next" onClick={() => pickNewRound()}>
+              <button className="btn-next-note" onClick={() => pickNewRound()}>
                 Próxima Nota ➔
               </button>
             )}
-          </main>
+          </div>
 
-          {/* Configuration section */}
-          <section className="config-section">
-            <h2>Notas selecionadas para treino ({activeNotes.length}/12)</h2>
+          {/* Settings / Notes selector */}
+          <div className="settings-panel">
+            <span className="settings-title">Notas Ativas ({activeNotes.length}/12)</span>
 
             <div className="presets-row">
-              <span className="presets-label">Pré-ajustes:</span>
-              {PRESETS.map(p => (
+              {PRESETS.map((p) => (
                 <button
                   key={p.id}
                   className="btn-preset"
@@ -565,7 +535,7 @@ export default function App() {
                     setSelectedNotes(p.notes)
                     setLastGuess(null)
                     setFeedbackText('')
-                    trackEvent('Training', 'select_preset', p.id)
+                    trackEvent('Training', 'preset', p.id)
                     syncToCloud(stats, p.notes)
                   }}
                 >
@@ -574,158 +544,164 @@ export default function App() {
               ))}
             </div>
 
-            <div className="notes-selector-grid">
-              {ALL_NOTES.map(note => {
-                const isChecked = selectedNotes.includes(note.id)
+            <div className="note-toggles">
+              {ALL_NOTES.map((n) => {
+                const on = selectedNotes.includes(n.id)
                 return (
-                  <label
-                    key={note.id}
-                    className={`note-toggle-card ${isChecked ? 'active' : ''} ${note.isAccidental ? 'accidental' : 'natural'}`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={isChecked}
-                      onChange={() => toggleNote(note.id)}
-                    />
-                    <div className="toggle-info">
-                      <span className="toggle-main">{note.name}</span>
-                      <span className="toggle-sub">{note.solfege}</span>
-                    </div>
+                  <label key={n.id} className={`note-toggle ${on ? 'on' : ''}`}>
+                    <input type="checkbox" checked={on} onChange={() => toggleNote(n.id)} />
+                    <span className="nt-main">{n.name}</span>
+                    <span className="nt-sub">{n.solfege}</span>
                   </label>
                 )
               })}
             </div>
 
-            {/* Global Settings */}
-            <div className="preferences-row">
-              <div className="pref-item">
-                <label htmlFor="notation-select">Notação:</label>
+            <div className="settings-controls">
+              <div className="ctrl">
+                <label>Notação:</label>
                 <select
-                  id="notation-select"
                   value={notation}
-                  onChange={e => {
-                    const val = e.target.value as 'letter' | 'solfege'
-                    setNotation(val)
-                    trackEvent('Training', 'change_notation', val)
+                  onChange={(e) => {
+                    const v = e.target.value as 'letter' | 'solfege'
+                    setNotation(v)
+                    trackEvent('Training', 'notation', v)
                   }}
                 >
-                  <option value="solfege">Dó, Ré, Mi (Solfège)</option>
-                  <option value="letter">C, D, E (Cifras)</option>
+                  <option value="solfege">Dó, Ré, Mi</option>
+                  <option value="letter">C, D, E</option>
                 </select>
               </div>
 
-              <div className="pref-item">
-                <label htmlFor="octave-select">Oitava:</label>
+              <div className="ctrl">
+                <label>Oitava:</label>
                 <select
-                  id="octave-select"
                   value={octave}
-                  onChange={e => {
-                    const val = e.target.value === 'random' ? 'random' : Number(e.target.value)
-                    setOctave(val)
-                    trackEvent('Training', 'change_octave', String(val))
+                  onChange={(e) => {
+                    const v = e.target.value === 'random' ? 'random' : Number(e.target.value)
+                    setOctave(v)
+                    trackEvent('Training', 'octave', String(v))
                   }}
                 >
-                  <option value="4">4ª Oitava (Médio - C4 a B4)</option>
-                  <option value="3">3ª Oitava (Grave - C3 a B3)</option>
-                  <option value="5">5ª Oitava (Agudo - C5 a B5)</option>
-                  <option value="random">Aleatória (3ª a 5ª)</option>
+                  <option value="4">4ª (Médio)</option>
+                  <option value="3">3ª (Grave)</option>
+                  <option value="5">5ª (Agudo)</option>
+                  <option value="random">Aleatória</option>
                 </select>
               </div>
 
-              <div className="pref-item checkbox-pref">
+              <div className="ctrl checkbox-ctrl">
                 <label>
                   <input
                     type="checkbox"
                     checked={autoAdvance}
-                    onChange={e => setAutoAdvance(e.target.checked)}
+                    onChange={(e) => setAutoAdvance(e.target.checked)}
                   />
-                  Avanço Automático
+                  Avanço automático
                 </label>
               </div>
             </div>
-          </section>
+          </div>
+
+          {/* Pro Teaser */}
+          <div className="pro-teaser">
+            <span className="pro-badge">Em Breve</span>
+            <span>Módulos de Intervalos (2ª a 8ª) e Acordes por R$ 9,90/mês.</span>
+            <button className="btn-pro-more" onClick={() => changeView('landing')}>
+              Ver Roadmap
+            </button>
+          </div>
         </div>
       )}
 
-      {/* Gated Access / Auth Modal */}
+      {/* Auth Modal */}
       {showAuthModal && (
         <div className="modal-backdrop" onClick={() => setShowAuthModal(false)}>
-          <div className="modal-box" onClick={e => e.stopPropagation()}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
             <button className="modal-close" onClick={() => setShowAuthModal(false)}>✕</button>
-            <div className="modal-header">
-              <span className="modal-icon">🎵</span>
-              <h3>Entrar no Audix</h3>
-              <p>O acesso ao treino é 100% gratuito. Faça login com Google para salvar seu histórico e recordes na nuvem.</p>
-            </div>
-
-            <button className="btn-modal-google" onClick={handleLogin}>
-              <svg className="google-icon" viewBox="0 0 24 24" width="20" height="20">
+            <span className="modal-icon">🎵</span>
+            <h3>Entrar no Audix</h3>
+            <p>O treino de notas é 100% gratuito. Faça login para salvar seus recordes e preferências.</p>
+            <button className="btn-google-modal" onClick={handleLogin}>
+              <svg viewBox="0 0 24 24" width="18" height="18">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                 <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
                 <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
               </svg>
-              <span>Continuar com Google</span>
+              Continuar com Google
             </button>
-
-            <span className="modal-footer-note">
-              🔒 Seus dados são salvos com segurança no Firebase do projeto Hipercube.
-            </span>
+            <span className="modal-note">Autenticado com segurança pelo Firebase.</span>
           </div>
         </div>
       )}
 
-      {/* PWA Install Instructions Modal */}
+      {/* Install Modal */}
       {showInstallModal && (
         <div className="modal-backdrop" onClick={() => setShowInstallModal(false)}>
-          <div className="modal-box install-modal" onClick={e => e.stopPropagation()}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
             <button className="modal-close" onClick={() => setShowInstallModal(false)}>✕</button>
-            <div className="modal-header">
-              <span className="modal-icon">📲</span>
-              <h3>Instalar o Audix</h3>
-              <p>Você pode instalar o Audix diretamente na tela inicial para treinar em tela cheia e offline.</p>
-            </div>
-
+            <span className="modal-icon">📲</span>
+            <h3>Instalar o Audix</h3>
+            <p>Adicione à tela inicial para praticar em tela cheia, mesmo sem internet.</p>
             <div className="install-steps">
-              <div className="install-step-item">
-                <span className="step-num">💻</span>
+              <div className="install-step">
+                <span className="install-step-icon">💻</span>
                 <div>
-                  <strong>No Computador (Chrome ou Edge):</strong>
-                  <p>Clique no ícone de instalar (computador com seta para baixo) na barra de endereços, ou no menu <strong>⋮</strong> ➔ <strong>"Instalar Audix"</strong>.</p>
+                  <strong>Chrome / Edge (PC)</strong>
+                  <p>Clique no ícone de instalar na barra de navegação ou no menu ⋮.</p>
                 </div>
               </div>
-
-              <div className="install-step-item">
-                <span className="step-num">🤖</span>
+              <div className="install-step">
+                <span className="install-step-icon">🤖</span>
                 <div>
-                  <strong>No Celular Android:</strong>
-                  <p>Toque no menu <strong>⋮</strong> (três pontinhos) ➔ <strong>"Instalar aplicativo"</strong> ou <strong>"Adicionar à tela inicial"</strong>.</p>
+                  <strong>Android (Chrome)</strong>
+                  <p>Toque em ⋮ ➔ "Instalar aplicativo" ou "Adicionar à tela inicial".</p>
                 </div>
               </div>
-
-              <div className="install-step-item">
-                <span className="step-num">🍏</span>
+              <div className="install-step">
+                <span className="install-step-icon">🍏</span>
                 <div>
-                  <strong>No iPhone / iPad (Safari):</strong>
-                  <p>Toque no botão de <strong>Compartilhar</strong> (quadrado com seta para cima) ➔ selecione <strong>"Adicionar à Tela de Início"</strong>.</p>
+                  <strong>iPhone / iPad (Safari)</strong>
+                  <p>Toque em Compartilhar ➔ "Adicionar à Tela de Início".</p>
                 </div>
               </div>
             </div>
-
-            <button className="btn-hero-primary" onClick={() => setShowInstallModal(false)} style={{ width: '100%', justifyContent: 'center' }}>
-              Entendi, obrigado!
+            <button
+              className="btn-primary"
+              style={{ width: '100%', justifyContent: 'center' }}
+              onClick={() => setShowInstallModal(false)}
+            >
+              Entendi
             </button>
           </div>
         </div>
       )}
 
-      <footer className="footer">
+      {/* Footer */}
+      <footer className="app-footer">
         <div className="footer-credits">
-          <span>Criado por <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" onClick={() => trackOutboundLink(INSTAGRAM_URL, 'instagram_klausterra_footer')}>Klaus Terra</a></span>
-          <span className="footer-divider">•</span>
-          <span>Desenvolvido pela <a href={HIPERCUBE_URL} target="_blank" rel="noopener noreferrer" onClick={() => trackOutboundLink(HIPERCUBE_URL, 'hipercube_portal_footer')}>Hipercube</a></span>
+          <span>Criado por</span>
+          <a
+            href={INSTAGRAM_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => trackOutboundLink(INSTAGRAM_URL, 'instagram_footer')}
+          >
+            Klaus Terra
+          </a>
+          <span className="footer-sep">•</span>
+          <span>Desenvolvido pela</span>
+          <a
+            href={HIPERCUBE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => trackOutboundLink(HIPERCUBE_URL, 'hipercube_footer')}
+          >
+            Hipercube
+          </a>
         </div>
-        <p className="footer-sub">Audix • Treino Auditivo Musical 100% Gratuito</p>
+        <span className="footer-sub">Audix • Treino de Ouvido 100% Gratuito</span>
       </footer>
     </div>
   )

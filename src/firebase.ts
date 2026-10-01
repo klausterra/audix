@@ -36,21 +36,25 @@ export async function loginWithGoogle(): Promise<User> {
   const result = await signInWithPopup(auth, googleProvider)
   const user = result.user
 
-  // Ensure profile doc exists in audix_users
-  const userRef = doc(db, 'audix_users', user.uid)
-  const snap = await getDoc(userRef)
-  if (!snap.exists()) {
-    await setDoc(userRef, {
-      displayName: user.displayName || '',
-      email: user.email || '',
-      photoURL: user.photoURL || '',
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-      stats: { total: 0, correct: 0, streak: 0, bestStreak: 0 },
-    }, { merge: true })
+  // Ensure profile doc exists in audix_users (non-blocking)
+  try {
+    const userRef = doc(db, 'audix_users', user.uid)
+    const snap = await getDoc(userRef)
+    if (!snap.exists()) {
+      await setDoc(userRef, {
+        displayName: user.displayName || '',
+        email: user.email || '',
+        photoURL: user.photoURL || '',
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        stats: { total: 0, correct: 0, streak: 0, bestStreak: 0 },
+      }, { merge: true })
+    }
+  } catch (err) {
+    console.warn('Could not sync user profile to Firestore:', err)
   }
 
-  // Also record lead in audix_leads
+  // Also record lead in audix_leads (non-blocking)
   try {
     const leadRef = doc(db, 'audix_leads', user.uid)
     await setDoc(leadRef, {

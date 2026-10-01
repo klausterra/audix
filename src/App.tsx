@@ -1,7 +1,12 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { ALL_NOTES, PRESETS, type NoteItem } from './types'
-import { playTone, playFeedback, midiToFrequency } from './audio'
+import { playTone, playFeedback, midiToFrequency, setMasterVolume } from './audio'
 import './App.css'
+
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>
+}
 
 export default function App() {
   const [selectedNotes, setSelectedNotes] = useState<string[]>(['C', 'D', 'E', 'F', 'G', 'A', 'B'])
@@ -14,9 +19,57 @@ export default function App() {
   const [autoAdvance, setAutoAdvance] = useState(true)
   const [isPlaying, setIsPlaying] = useState(false)
   const [feedbackText, setFeedbackText] = useState<string>('')
+  const [volume, setVolume] = useState<number>(75)
+  const [isMuted, setIsMuted] = useState(false)
+  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null)
+  const [isInstalled, setIsInstalled] = useState(false)
   const timerRef = useRef<number | null>(null)
 
   const activeNotes = ALL_NOTES.filter(n => selectedNotes.includes(n.id))
+
+  // Sync volume with audio engine
+  useEffect(() => {
+    setMasterVolume(isMuted ? 0 : volume / 100)
+  }, [volume, isMuted])
+
+  // PWA beforeinstallprompt capture
+  useEffect(() => {
+    const handleBeforeInstall = (e: Event) => {
+      e.preventDefault()
+      setInstallPrompt(e as BeforeInstallPromptEvent)
+    }
+
+    const handleAppInstalled = () => {
+      setIsInstalled(true)
+      setInstallPrompt(null)
+    }
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall)
+    window.addEventListener('appinstalled', handleAppInstalled)
+
+    // Check if running in standalone mode (already installed)
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      setIsInstalled(true)
+    }
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstall)
+      window.removeEventListener('appinstalled', handleAppInstalled)
+    }
+  }, [])
+
+  const handleInstallClick = async () => {
+    if (!installPrompt) {
+      alert('Para instalar no iOS/Safari: toque no botão Compartilhar e selecione "Adicionar à Tela de Início".')
+      return
+    }
+    await installPrompt.prompt()
+    const { outcome } = await installPrompt.userChoice
+    if (outcome === 'accepted') {
+      setIsInstalled(true)
+      setInstallPrompt(null)
+    }
+  }
 
   const getNoteLabel = useCallback((note: NoteItem) => {
     if (notation === 'solfege') {
@@ -143,10 +196,24 @@ export default function App() {
   return (
     <div className="app-container">
       <header className="header">
-        <div className="brand">
-          <span className="logo-icon">🎵</span>
-          <h1>Audix</h1>
-          <span className="badge">Treino Auditivo</span>
+        <div className="header-top">
+          <div className="brand">
+            <span className="logo-icon">🎵</span>
+            <h1>Audix</h1>
+            <span className="badge">Treino Auditivo</span>
+          </div>
+
+          <div className="header-actions">
+            {!isInstalled && (
+              <button
+                className="btn-install"
+                onClick={handleInstallClick}
+                title="Instalar Audix no seu dispositivo"
+              >
+                📲 Instalar App
+              </button>
+            )}
+          </div>
         </div>
         <p className="subtitle">Selecione notas para treinar seu ouvido relativo e absoluto</p>
       </header>
@@ -187,6 +254,30 @@ export default function App() {
           <button className="btn-ref" onClick={playReferenceC} title="Tocar Dó central (C4)">
             🎯 Referência C4
           </button>
+        </div>
+
+        {/* Volume control */}
+        <div className="volume-bar">
+          <button
+            className="btn-volume-icon"
+            onClick={() => setIsMuted(prev => !prev)}
+            title={isMuted ? 'Desmutar' : 'Mutar'}
+          >
+            {isMuted || volume === 0 ? '🔇' : volume < 50 ? '🔉' : '🔊'}
+          </button>
+          <input
+            type="range"
+            min="0"
+            max="100"
+            value={isMuted ? 0 : volume}
+            onChange={e => {
+              setVolume(Number(e.target.value))
+              if (isMuted) setIsMuted(false)
+            }}
+            className="volume-slider"
+            aria-label="Controle de volume"
+          />
+          <span className="volume-label">{isMuted ? 'Mudo' : `${volume}%`}</span>
         </div>
 
         <div className="shortcut-hint">
@@ -236,7 +327,7 @@ export default function App() {
         )}
       </main>
 
-      {/* Configuration drawer / section */}
+      {/* Configuration section */}
       <section className="config-section">
         <h2>Notas selecionadas para treino ({activeNotes.length}/12)</h2>
 
@@ -321,7 +412,7 @@ export default function App() {
       </section>
 
       <footer className="footer">
-        <p>Audix • Treino Auditivo Musical Interativo</p>
+        <p>Audix • PWA Instalável • Treino Auditivo Musical</p>
       </footer>
     </div>
   )

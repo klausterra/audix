@@ -5,7 +5,13 @@
 }
 
 .header {
-  text-align: center;
+  margin-bottom: 4px;
+}
+
+.header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: 4px;
 }
 
@@ -13,7 +19,28 @@
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 6px;
+}
+
+.btn-install {
+  background: rgba(139, 92, 246, 0.2);
+  color: #c084fc;
+  border: 1px solid rgba(139, 92, 246, 0.4);
+  border-radius: 9999px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s ease;
+}
+
+.btn-install:hover {
+  background: rgba(139, 92, 246, 0.35);
+  border-color: #c084fc;
+  color: #fff;
+  transform: translateY(-1px);
 }
 
 .logo-icon {
@@ -111,6 +138,46 @@
   display: flex;
   gap: 12px;
   align-items: center;
+}
+
+/* Volume Bar */
+.volume-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
+  padding: 6px 14px;
+  border-radius: 9999px;
+  width: 260px;
+  max-width: 90%;
+}
+
+.btn-volume-icon {
+  background: transparent;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  color: var(--text-muted);
+}
+
+.volume-slider {
+  flex: 1;
+  accent-color: var(--accent-purple);
+  cursor: pointer;
+  height: 4px;
+}
+
+.volume-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  width: 32px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 .btn-play {

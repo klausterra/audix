@@ -1640,3 +1640,296 @@
   font-size: 11px;
   color: var(--text-sub);
 }
+
+/* ==========================================================================
+   Responsive Adaptations (Foldables: Galaxy Z Fold 6 folded ~375-400px / unfolded ~768px,
+   Small Screens & Touch Ergonomics)
+   ========================================================================== */
+
+@media (max-width: 480px) {
+  .navbar {
+    padding: 8px 10px;
+    gap: 8px;
+    border-radius: 12px;
+  }
+
+  .nav-brand {
+    gap: 5px;
+  }
+
+  .logo-icon {
+    font-size: 20px;
+  }
+
+  .logo-title {
+    font-size: 17px;
+  }
+
+  .navbar .badge {
+    display: none;
+  }
+
+  .nav-links {
+    padding: 2px;
+    gap: 2px;
+  }
+
+  .nav-btn {
+    padding: 4px 9px;
+    font-size: 11px;
+  }
+
+  .btn-install-nav span {
+    display: none;
+  }
+
+  .btn-install-nav {
+    padding: 5px 8px;
+  }
+
+  .btn-auth-google {
+    padding: 5px 8px;
+    font-size: 11px;
+    gap: 4px;
+  }
+
+  .user-info-pill {
+    padding: 3px 6px 3px 4px;
+    gap: 4px;
+  }
+
+  .user-name {
+    font-size: 11px;
+    max-width: 60px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .btn-logoff {
+    padding: 3px 6px;
+    font-size: 10px;
+  }
+
+  /* Hero */
+  .hero-section {
+    padding: 20px 8px 12px;
+    gap: 12px;
+  }
+
+  .hero-title {
+    font-size: 24px;
+    line-height: 1.2;
+  }
+
+  .hero-desc {
+    font-size: 13px;
+  }
+
+  .btn-hero-primary {
+    width: 100%;
+    justify-content: center;
+    padding: 11px 16px;
+    font-size: 13px;
+  }
+
+  .btn-hero-install {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Free Banner */
+  .free-banner {
+    padding: 14px 14px;
+  }
+
+  .free-banner-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .free-badge-big {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+
+  .free-banner-text h3 {
+    font-size: 15px;
+  }
+
+  .free-banner-text p {
+    font-size: 12px;
+  }
+
+  /* Training View */
+  .training-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .training-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .training-creator-mini {
+    flex-wrap: wrap;
+    font-size: 10px;
+  }
+
+  .practice-box {
+    padding: 16px 12px;
+    gap: 12px;
+  }
+
+  .sound-controls {
+    width: 100%;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .btn-play {
+    width: 100%;
+    justify-content: center;
+    padding: 11px 20px;
+  }
+
+  .btn-ref {
+    width: 100%;
+    padding: 7px 12px;
+  }
+
+  .volume-bar {
+    width: 100%;
+    max-width: 100%;
+    padding: 6px 12px;
+  }
+
+  .options-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+
+  .btn-note {
+    padding: 10px 4px;
+    min-height: 52px;
+  }
+
+  .note-name {
+    font-size: 15px;
+  }
+
+  .note-alt {
+    font-size: 10px;
+  }
+
+  .notes-selector-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 6px;
+  }
+
+  .note-toggle-card {
+    padding: 6px 6px;
+    gap: 4px;
+  }
+
+  .toggle-main {
+    font-size: 12px;
+  }
+
+  .toggle-sub {
+    font-size: 9px;
+  }
+
+  .preferences-row {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .pref-item {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .pref-item select {
+    flex: 1;
+    max-width: 180px;
+  }
+
+  /* Stats card */
+  .stats-card {
+    padding: 10px 12px;
+  }
+
+  .stat-value {
+    font-size: 18px;
+  }
+
+  /* Pro Teaser */
+  .pro-teaser-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .pro-teaser-btn {
+    align-self: flex-end;
+  }
+
+  /* Showcase */
+  .showcase-body {
+    align-items: center;
+  }
+
+  .showcase-photo,
+  .showcase-logo-wrap {
+    width: 48px;
+    height: 48px;
+  }
+
+  .btn-showcase {
+    font-size: 12px;
+    padding: 8px 12px;
+  }
+
+  .footer-credits {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .footer-divider {
+    display: none;
+  }
+}
+
+/* Specific to Z Fold 6 folded ultra-narrow screen (width <= 412px) */
+@media (max-width: 412px) {
+  .options-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .btn-note {
+    padding: 8px 2px;
+  }
+
+  .stats-card {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .stat-divider {
+    display: none;
+  }
+
+  .stats-card .stat-item:last-child {
+    grid-column: span 2;
+    margin-top: 4px;
+  }
+
+  .btn-secondary {
+    width: 100%;
+  }
+}

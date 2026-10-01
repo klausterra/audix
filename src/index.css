@@ -25,13 +25,17 @@ body {
   background-color: var(--bg-primary);
   color: var(--text-main);
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  padding: 24px 16px;
+  padding: 16px 12px;
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
 }
 
 #root {
   width: 100%;
   max-width: 780px;
+  min-width: 0;
 }

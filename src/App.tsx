@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import type { User } from 'firebase/auth'
 import { ALL_NOTES, PRESETS, type NoteItem } from './types'
-import { playTone, playFeedback, midiToFrequency, setMasterVolume } from './audio'
+import { playTone, playFeedback, midiToFrequency, setMasterVolume, setSoundTimbre, type SoundTimbre } from './audio'
 import {
   loginWithGoogle,
   logoutUser,
@@ -38,6 +38,7 @@ export default function App() {
   const [showInstallModal, setShowInstallModal] = useState(false)
 
   // Training state
+  const [timbre, setTimbre] = useState<SoundTimbre>('piano')
   const [selectedNotes, setSelectedNotes] = useState<string[]>(['C', 'D', 'E', 'F', 'G', 'A', 'B'])
   const [notation, setNotation] = useState<'letter' | 'solfege'>('solfege')
   const [octave, setOctave] = useState<number | 'random'>(4)
@@ -107,6 +108,10 @@ export default function App() {
   useEffect(() => {
     setMasterVolume(isMuted ? 0 : volume / 100)
   }, [volume, isMuted])
+
+  useEffect(() => {
+    setSoundTimbre(timbre)
+  }, [timbre])
 
   useEffect(() => {
     const unsubscribe = subscribeToAuth(async (currentUser) => {
@@ -558,6 +563,21 @@ export default function App() {
             </div>
 
             <div className="settings-controls">
+              <div className="ctrl">
+                <label>Timbre:</label>
+                <select
+                  value={timbre}
+                  onChange={(e) => {
+                    const t = e.target.value as SoundTimbre
+                    setTimbre(t)
+                    trackEvent('Training', 'timbre', t)
+                  }}
+                >
+                  <option value="piano">🎹 Piano Acústico</option>
+                  <option value="synth">🔊 Sintetizador</option>
+                </select>
+              </div>
+
               <div className="ctrl">
                 <label>Notação:</label>
                 <select

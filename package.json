@@ -1,11 +1,12 @@
 {
-  "name": "audiction",
+  "name": "audix",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "deploy": "npm run build && wrangler pages deploy dist --project-name audix",
     "lint": "oxlint",
     "preview": "vite preview"
   },

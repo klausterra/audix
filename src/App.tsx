@@ -145,7 +145,7 @@ export default function App() {
       <header className="header">
         <div className="brand">
           <span className="logo-icon">🎵</span>
-          <h1>Audiction</h1>
+          <h1>Audix</h1>
           <span className="badge">Treino Auditivo</span>
         </div>
         <p className="subtitle">Selecione notas para treinar seu ouvido relativo e absoluto</p>
@@ -321,7 +321,7 @@ export default function App() {
       </section>
 
       <footer className="footer">
-        <p>Audiction • Treino Auditivo Musical Interativo</p>
+        <p>Audix • Treino Auditivo Musical Interativo</p>
       </footer>
     </div>
   )

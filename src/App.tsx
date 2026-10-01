@@ -116,6 +116,8 @@ export default function App() {
       setUser(currentUser)
       if (currentUser) {
         setMatomoUser(currentUser.uid)
+        setCurrentView('app')
+        trackPageView('/app', 'Audix • Treino de Ouvido')
         setIsSyncing(true)
         const cloudStats = await fetchUserStatsFromFirestore(currentUser.uid)
         if (cloudStats) {
